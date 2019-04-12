@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap-datetimepicker/js/bootstrap-datetimepicker.js"></script>
+<link type="text/css" rel="stylesheet" href="../js/bootstrap3/css/bootstrap.css">
+<link type="text/css" rel="stylesheet" href="../js/bootstrap-table/bootstrap-table.css">
+<link type="text/css" rel="stylesheet" href="../js/bootstrap-datetimepicker/css/bootstrap-datetimepicker.css">
+<link type="text/css" rel="stylesheet" href="../js/bootstrap-fileinput/css/fileinput.css">
+
+<script src="../js/bootstrap3/js/bootstrap.js"></script>
+<script src="../js/bootstrap-bootbox/bootbox.js"></script>
+<script src="../js/bootstrap-table/bootstrap-table.js"></script>
+<script src="../js/bootstrap-table/locale/bootstrap-table-zh-CN.js"></script>
+<script src="../js/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+<script src="../js/bootstrap-fileinput/js/fileinput.js"></script>
+<script src="../js/bootstrap-fileinput/js/locales/zh.js"></script>
+<body>
+   <button onclick="openUser()" type="button" class="btn btn-primary glyphicon glyphicon-plus">新增</button>
+   <table class="table" id="userTable"></table>
+</body>
+<script type="text/javascript">
+    $(function(){
+        initUser();
+    })
+    var res;
+    function createAddContent(url){
+        $.ajax({
+            url:url,
+            async:false,
+            success:function(data){
+                res = data;
+            }
+        });
+        return res;
+    }
+    //打开新增弹框
+    function openUser(){
+        bootbox.dialog({
+            title:'新增',
+            message: createAddContent("../addUser"),
+            closeButton: true,
+            buttons : {
+                "success" : {
+                    "label" : "<i class='icon-ok'></i> 保存",
+                    "className" : "btn-sm btn-success",
+                    "callback" : function() {
+                        $.ajax({
+                            url:'../saveUser',
+                            type:'post',
+                            data:$("#userForm").serialize(),
+                            dataType:'json',
+                            success:function(data){
+                                if(data){
+                                    bootbox.alert({
+                                        size: "small",
+                                        title: "提示",
+                                        message: "新增成功!",
+                                        callback: function(){}
+                                    })
+                                    $('#userTable').bootstrapTable('refresh');
+                                }
+                            }
+                        });
+                    }
+                },
+                "cancel" : {
+                    "label" : "<i class='icon-info'></i> 取消",
+                    "className" : "btn-sm btn-danger",
+                    "callback" : function() {
+
+                    }
+                }
+            }
+        });
+    }
+
+    function initUser(){
+        $('#userTable').bootstrapTable({
+            url:'../findUserList',//获取数据地址
+            pagination:true, //是否展示分页
+            pageList:[3,5, 10, 20, 50],//分页组件
+            pageNumber:1,
+            pageSize:3,//默认每页条数
+            showPaginationSwitch:false,//是否显示 数据条数选择框
+            clickToSelect: true, //是否启用点击选中行
+            sidePagination:'server',//分页方式：client客户端分页，server服务端分页（*
+            striped:true,
+            queryParams:function(){
+                return {
+                    page: this.pageNumber,
+                    rows: this.pageSize,
+                };
+            },
+            columns:[
+                {checkbox:true},
+                {field:'id',title:'ID',align:'center'},
+                {field:'userName',title:'昵称',align:'center'},
+                {field:'userNumber',title:'账号',align:'center'},
+                {field:'userPassword',title:'密码',align:'center'},
+                {field:'userAge',title:'年龄',align:'center'},
+                {field:'userSex',title:'性别',align:'center',formatter:function(value){
+                        return value == 1 ? '男':'女';
+                    }},
+                {field:'birth',title:'生日',align:'center'},
+                {field:'roleName',title:'学校',align:'center'},
+                {field:'qwer',title:'操作',align:'center',formatter:function(value,row,index){
+                        return '<button onclick="del('+row.id+')" type="button" class="btn btn-primary glyphicon glyphicon-minus">删除</button> |<button onclick="upd('+row.id+')" type="button" class="btn btn-primary glyphicon glyphicon-minus">修改</button>';
+                 }}
+            ]
+        });
+    }
+    function del(userId){
+        alert(userId);
+        bootbox.confirm({
+            size: "small",
+            title:"提示",
+            message: "确认要删除吗？",
+            callback: function(result){
+                if(!result){
+                    return;
+                }else{
+                    $.ajax({
+                        url:'../delUser',
+                        type:'post',
+                        data:{id:userId},
+                        success:function(data){
+                            if(data){
+                                bootbox.alert({
+                                    size: "small",
+                                    title: "提示",
+                                    message: "删除成功!",
+                                    callback: function(){}
+                                })
+                                $("#userTable").bootstrapTable('refresh');
+                            }else{
+                                bootbox.alert('删除失败!');
+                            }
+                        }
+                    })
+                }
+
+            }
+        })
+    }
+    //打开修改弹框
+    function upd(userId){
+        bootbox.dialog({
+            title:'修改',
+            message: createAddContent("../updateUser"),
+            closeButton: true,
+            buttons : {
+                "success" : {
+                    "label" : "<i class='icon-ok'></i> 保存",
+                    "className" : "btn-sm btn-success",
+                    "callback" : function() {
+                        $.ajax({
+                            url:'../updateUser',
+                            type:'post',
+                            data:$("#userForm").serialize(),
+                            dataType:'json',
+                            success:function(data){
+                                if(data){
+                                    bootbox.alert({
+                                        size: "small",
+                                        title: "提示",
+                                        message: "修改成功!",
+                                        callback: function(){}
+                                    })
+                                    $('#userTable').bootstrapTable('refresh');
+                                }
+                            }
+                        });
+                    }
+                },
+                "cancel" : {
+                    "label" : "<i class='icon-info'></i> 取消",
+                    "className" : "btn-sm btn-danger",
+                    "callback" : function() {
+
+                    }
+                }
+            }
+        });
+        //回显用户信息
+        alert(55555);
+        alert(userId);
+        $.ajax({
+            url:'../findUserById',
+            type:'post',
+            data:{id:id},
+            success:function(data){
+                $("#userId").val(data.id);
+                $("#userName").val(data.userName);
+                $("#userAge").val(data.userAge);
+                $("#userNumber").val(data.userNumber);
+                $("#userPassword").val(data.userPassword);
+                $(":input[name='userSex']").each(function(){
+                    var al = $(this).val();
+                    if(al == data.userSex){
+                        $(this).prop("checked",true);
+                    }
+                })
+            }
+        })
+    }
+</script>
+</html>
